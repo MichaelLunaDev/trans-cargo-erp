@@ -13,4 +13,6 @@ public interface RevisionUseCase {
     List<Revision> listarPorVehiculo(Long vehiculoId);
 
     List<Revision> listarVencidas();
+
+    void eliminar(Long id);
 }
