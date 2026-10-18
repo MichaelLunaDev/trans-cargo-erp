@@ -13,4 +13,6 @@ public interface PesajeUseCase {
     List<Pesaje> listarPorViaje(Long viajeId);
 
     List<Pesaje> listarTodos();
+
+    void eliminar(Long id);
 }

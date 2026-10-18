@@ -26,4 +26,12 @@ public class GuiaRemisionModel implements GuiaRemisionConstraint {
                     + " ya se encuentra anulada");
         }
     }
+
+    @Override
+    public void validarEliminacion(GuiaRemision guiaRemision) {
+        if (guiaRemision.getEstado() != EstadoGuia.ANULADA) {
+            throw new ReglaNegocioException("La guia " + guiaRemision.getSerie() + "-" + guiaRemision.getNumero()
+                    + " no se puede eliminar porque no esta anulada");
+        }
+    }
 }

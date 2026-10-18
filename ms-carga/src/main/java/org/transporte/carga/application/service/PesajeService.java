@@ -53,4 +53,11 @@ public class PesajeService implements PesajeUseCase {
     public List<Pesaje> listarTodos() {
         return pesajeOutService.listarTodos();
     }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        buscarPorId(id);
+        pesajeOutService.eliminar(id);
+    }
 }

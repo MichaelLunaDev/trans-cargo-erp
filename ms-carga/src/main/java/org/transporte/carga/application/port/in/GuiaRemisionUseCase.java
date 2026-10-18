@@ -13,4 +13,6 @@ public interface GuiaRemisionUseCase {
     List<GuiaRemision> listarPorViaje(Long viajeId);
 
     GuiaRemision anular(Long id);
+
+    void eliminar(Long id);
 }

@@ -60,4 +60,12 @@ public class GuiaRemisionService implements GuiaRemisionUseCase {
         guiaRemision.setEstado(EstadoGuia.ANULADA);
         return guiaRemisionOutService.guardar(guiaRemision);
     }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        GuiaRemision guiaRemision = buscarPorId(id);
+        guiaRemisionConstraint.validarEliminacion(guiaRemision);
+        guiaRemisionOutService.eliminar(id);
+    }
 }

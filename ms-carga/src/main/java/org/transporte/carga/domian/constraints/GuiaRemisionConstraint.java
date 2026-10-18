@@ -7,4 +7,6 @@ public interface GuiaRemisionConstraint {
     void validarSerie(String serie);
 
     void validarAnulacion(GuiaRemision guiaRemision);
+
+    void validarEliminacion(GuiaRemision guiaRemision);
 }
