@@ -135,6 +135,14 @@ public class ViajeService implements ViajeUseCase {
         return viajeOutService.listar(estado, vehiculoId);
     }
 
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        Viaje viaje = obtener(id);
+        viajeConstraint.validarEliminacion(viaje);
+        viajeOutService.eliminar(id);
+    }
+
     private Viaje obtener(Long id) {
         return viajeOutService.buscarPorId(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe el viaje con id " + id));

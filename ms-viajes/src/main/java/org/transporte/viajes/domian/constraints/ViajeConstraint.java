@@ -12,4 +12,6 @@ public interface ViajeConstraint {
     void validarTransicion(Viaje viaje, EstadoViaje nuevoEstado);
 
     void validarSinViajeEnCurso(Viaje viaje, List<Viaje> enCursoDelVehiculo, List<Viaje> enCursoDelConductor);
+
+    void validarEliminacion(Viaje viaje);
 }

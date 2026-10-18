@@ -48,6 +48,15 @@ public class ViajeModel implements ViajeConstraint {
         }
     }
 
+    @Override
+    public void validarEliminacion(Viaje viaje) {
+        EstadoViaje actual = viaje.getEstado();
+        if (actual != EstadoViaje.PROGRAMADO && actual != EstadoViaje.CANCELADO) {
+            throw new ReglaNegocioException("El viaje con id " + viaje.getId() + " no se puede eliminar en estado "
+                    + actual + "; solo se eliminan viajes PROGRAMADO o CANCELADO");
+        }
+    }
+
     private boolean tieneOtroViaje(Viaje viaje, List<Viaje> enCurso) {
         return enCurso.stream().anyMatch(otro -> !Objects.equals(otro.getId(), viaje.getId()));
     }
