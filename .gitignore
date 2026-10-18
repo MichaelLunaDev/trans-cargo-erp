@@ -9,7 +9,8 @@ bin/
 
 .idea/
 *.iml
-out/
+/out/
+/*/out/
 
 .vscode/
 
