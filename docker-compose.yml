@@ -1,0 +1,162 @@
+# TRANS-CARGO ERP: sistema completo (PostgreSQL, RabbitMQ y los 7 servicios).
+# Uso: docker compose up -d --build
+# Solo el gateway (8080) queda publicado; el resto se comunica por la red interna.
+# Los valores se leen del archivo .env (ver .env.example); si no existe, se usan los valores por defecto.
+# El compose de docker/ se mantiene para desarrollo local desde el IDE.
+
+name: transcargo
+
+# configuración común de los servicios Spring Boot
+x-servicio: &servicio
+  restart: unless-stopped
+  networks:
+    - transcargo
+
+x-entorno-jvm: &entorno-jvm
+  JAVA_TOOL_OPTIONS: ${JAVA_OPTS:--Xms64m -Xmx192m -XX:MaxMetaspaceSize=128m -Xss512k -XX:+UseSerialGC}
+
+x-entorno-db: &entorno-db
+  DB_USER: ${POSTGRES_USER:-postgres}
+  DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+
+x-entorno-rabbit: &entorno-rabbit
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: 5672
+  RABBITMQ_USER: ${RABBITMQ_USER:-transcargo}
+  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-transcargo}
+
+# clave JWT compartida por ms-auth (firma) y gateway (valida)
+x-jwt-secret: &jwt-secret ${JWT_SECRET:-trans-cargo-erp-clave-secreta-desarrollo-minimo-32-bytes}
+
+x-depende-infra: &depende-infra
+  postgres:
+    condition: service_healthy
+  rabbitmq:
+    condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - transcargo
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-transcargo}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-transcargo}
+    # ports:
+    #   - "15672:15672"   # panel de administración (solo si hace falta revisarlo)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+    networks:
+      - transcargo
+
+  ms-auth:
+    <<: *servicio
+    build: ./ms-auth
+    environment:
+      <<: [*entorno-jvm, *entorno-db]
+      DB_URL: jdbc:postgresql://postgres:5432/db_auth
+      JWT_SECRET: *jwt-secret
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+    depends_on: *depende-infra
+
+  ms-flota:
+    <<: *servicio
+    build: ./ms-flota
+    environment:
+      <<: [*entorno-jvm, *entorno-db]
+      DB_URL: jdbc:postgresql://postgres:5432/db_flota
+    depends_on: *depende-infra
+
+  ms-conductores:
+    <<: *servicio
+    build: ./ms-conductores
+    environment:
+      <<: [*entorno-jvm, *entorno-db]
+      DB_URL: jdbc:postgresql://postgres:5432/db_conductores
+    depends_on: *depende-infra
+
+  ms-carga:
+    <<: *servicio
+    build: ./ms-carga
+    environment:
+      <<: [*entorno-jvm, *entorno-db]
+      DB_URL: jdbc:postgresql://postgres:5432/db_carga
+    depends_on: *depende-infra
+
+  ms-mantenimiento:
+    <<: *servicio
+    build: ./ms-mantenimiento
+    environment:
+      <<: [*entorno-jvm, *entorno-db, *entorno-rabbit]
+      DB_URL: jdbc:postgresql://postgres:5432/db_mantenimiento
+    depends_on: *depende-infra
+
+  ms-viajes:
+    <<: *servicio
+    build: ./ms-viajes
+    environment:
+      <<: [*entorno-jvm, *entorno-db, *entorno-rabbit]
+      DB_URL: jdbc:postgresql://postgres:5432/db_viajes
+      FLOTA_URL: http://ms-flota:8082
+      CONDUCTORES_URL: http://ms-conductores:8083
+    depends_on:
+      <<: *depende-infra
+      ms-flota:
+        condition: service_started
+      ms-conductores:
+        condition: service_started
+
+  gateway:
+    <<: *servicio
+    build: ./gateway
+    environment:
+      <<: *entorno-jvm
+      AUTH_URL: http://ms-auth:8086
+      VIAJES_URL: http://ms-viajes:8081
+      FLOTA_URL: http://ms-flota:8082
+      CONDUCTORES_URL: http://ms-conductores:8083
+      CARGA_URL: http://ms-carga:8084
+      MANTENIMIENTO_URL: http://ms-mantenimiento:8085
+      # misma clave que ms-auth (ancla x-jwt-secret)
+      JWT_SECRET: *jwt-secret
+      CORS_ORIGENES: ${CORS_ORIGENES:-*}
+    ports:
+      - "8080:8080"
+    depends_on:
+      ms-auth:
+        condition: service_started
+      ms-viajes:
+        condition: service_started
+      ms-flota:
+        condition: service_started
+      ms-conductores:
+        condition: service_started
+      ms-carga:
+        condition: service_started
+      ms-mantenimiento:
+        condition: service_started
+
+networks:
+  transcargo:
+
+volumes:
+  pgdata:

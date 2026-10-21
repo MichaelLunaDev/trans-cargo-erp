@@ -44,4 +44,9 @@ public class PesajeAdapter implements PesajeOutService {
                 .map(entity -> modelMapper.map(entity, Pesaje.class))
                 .toList();
     }
+
+    @Override
+    public void eliminar(Long id) {
+        pesajeRepository.deleteById(id);
+    }
 }

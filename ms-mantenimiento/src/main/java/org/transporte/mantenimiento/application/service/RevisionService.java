@@ -61,4 +61,12 @@ public class RevisionService implements RevisionUseCase {
     public List<Revision> listarVencidas() {
         return revisionOutService.listarPorEstado(EstadoRevision.VENCIDA);
     }
+
+    @Override
+    @Transactional
+    public void eliminar(Long id) {
+        revisionOutService.buscarPorId(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe la revision con id " + id));
+        revisionOutService.eliminar(id);
+    }
 }

@@ -1,6 +1,7 @@
 .metadata/
 
 target/
+*.class
 .classpath
 .project
 .settings/
@@ -9,7 +10,8 @@ bin/
 
 .idea/
 *.iml
-out/
+/out/
+/*/out/
 
 .vscode/
 
@@ -20,10 +22,9 @@ logs/
 *.env
 application-local.properties
 
-mvnw
-mvnw.cmd
-.mvn/
 HELP.md
 
 .DS_Store
 Thumbs.db
+
+historial.txt

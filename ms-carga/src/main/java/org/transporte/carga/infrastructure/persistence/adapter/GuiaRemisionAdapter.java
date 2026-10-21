@@ -44,4 +44,9 @@ public class GuiaRemisionAdapter implements GuiaRemisionOutService {
                 .map(GuiaRemisionEntity::getNumero)
                 .orElse(0);
     }
+
+    @Override
+    public void eliminar(Long id) {
+        guiaRemisionRepository.deleteById(id);
+    }
 }

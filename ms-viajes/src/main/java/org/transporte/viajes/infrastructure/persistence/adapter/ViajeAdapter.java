@@ -70,6 +70,11 @@ public class ViajeAdapter implements ViajeOutService {
         return viajeRepository.existsByConductorIdAndFechaSalidaAndEstadoIn(conductorId, fechaSalida, estados);
     }
 
+    @Override
+    public void eliminar(Long id) {
+        viajeRepository.deleteById(id);
+    }
+
     private List<Viaje> convertir(List<ViajeEntity> entities) {
         return entities.stream()
                 .map(entity -> modelMapper.map(entity, Viaje.class))
