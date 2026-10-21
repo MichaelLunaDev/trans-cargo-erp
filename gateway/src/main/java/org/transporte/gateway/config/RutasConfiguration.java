@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RutasConfiguration {
 
-    // las rutas llegan al servicio tal cual, sin reescribirlas
     @Bean
     public RouteLocator rutas(RouteLocatorBuilder builder,
                               @Value("${servicios.auth.url}") String authUrl,

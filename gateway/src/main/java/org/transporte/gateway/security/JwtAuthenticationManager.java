@@ -32,7 +32,6 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
     }
 
     private Authentication crearAutenticacion(Claims claims, String token) {
-        // ms-auth envia el rol en el claim "role"; por ahora solo se exige estar autenticado
         String rol = claims.get("role", String.class);
         List<SimpleGrantedAuthority> permisos = rol == null ? List.of()
                 : List.of(new SimpleGrantedAuthority("ROLE_" + rol));

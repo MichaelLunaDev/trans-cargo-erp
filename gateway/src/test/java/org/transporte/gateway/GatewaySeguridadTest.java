@@ -35,10 +35,8 @@ import io.jsonwebtoken.security.Keys;
 @AutoConfigureWebTestClient(timeout = "20s")
 class GatewaySeguridadTest {
 
-    // mismo valor por defecto que jwt.secret de ms-auth
     private static final String SECRETO = "trans-cargo-erp-clave-secreta-desarrollo-minimo-32-bytes";
 
-    // servidor falso que hace de ms-viajes y guarda el Authorization que le llega
     private static final AtomicInteger PETICIONES_RECIBIDAS = new AtomicInteger();
     private static final AtomicReference<String> AUTHORIZATION_RECIBIDO = new AtomicReference<>();
     private static HttpServer msViajesFalso;
@@ -60,7 +58,6 @@ class GatewaySeguridadTest {
         });
         msViajesFalso.start();
 
-        // los demas servicios apuntan a un puerto donde no hay nadie escuchando
         String apagado = "http://localhost:" + puertoLibre();
         registry.add("servicios.viajes.url", () -> "http://localhost:" + msViajesFalso.getAddress().getPort());
         registry.add("servicios.auth.url", () -> apagado);
@@ -88,7 +85,6 @@ class GatewaySeguridadTest {
         }
     }
 
-    // genera el token igual que JwtService de ms-auth
     private String token(String secreto, long expiraEnMs) {
         SecretKey clave = Keys.hmacShaKeyFor(secreto.getBytes(StandardCharsets.UTF_8));
         Date ahora = new Date();
@@ -179,7 +175,6 @@ class GatewaySeguridadTest {
                     .bodyValue("{\"username\":\"admin\",\"password\":\"12345678\"}")
                     .exchange()
                     .returnResult(String.class).getStatus();
-            // pasa el filtro de seguridad; falla despues porque ms-auth no esta levantado
             assertNotEquals(401, status.value(), ruta);
             assertEquals(503, status.value(), ruta + " devolvio " + status);
         }

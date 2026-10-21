@@ -43,7 +43,6 @@ public class ViajeService implements ViajeUseCase {
     private final ConductorConstraint conductorConstraint;
     private final PlacaConstraint placaConstraint;
 
-    // sin @Transactional: no se deja abierta una transaccion mientras se consulta a flota y conductores
     @Override
     public Viaje programar(Viaje viaje) {
         viajeConstraint.validarDatos(viaje);
@@ -76,7 +75,6 @@ public class ViajeService implements ViajeUseCase {
         return viajeOutService.guardar(viaje);
     }
 
-    // sin @Transactional: guardar() confirma el cambio a EN_CURSO antes de publicar el evento
     @Override
     public Viaje iniciar(Long id) {
         Viaje viaje = obtener(id);
@@ -95,7 +93,6 @@ public class ViajeService implements ViajeUseCase {
             viajeEventoOutService.publicarViajeIniciado(evento);
             log.info("Evento viaje.iniciado publicado: eventId={}, viajeId={}", evento.getEventId(), guardado.getId());
         } catch (RuntimeException ex) {
-            // el viaje queda EN_CURSO aunque falle la mensajeria
             log.error("No se pudo publicar el evento viaje.iniciado (eventId={}, viajeId={}, vehiculoId={}, "
                     + "distanciaKm={}). MS-Mantenimiento no sumara estos km. Causa: {}",
                     evento.getEventId(), evento.getViajeId(), evento.getVehiculoId(), evento.getDistanciaKm(),

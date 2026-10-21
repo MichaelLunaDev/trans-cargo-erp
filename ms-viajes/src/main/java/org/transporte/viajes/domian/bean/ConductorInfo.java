@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// lo minimo que MS-Viajes necesita saber de un conductor de MS-Conductores
 @Getter
 @Setter
 @NoArgsConstructor

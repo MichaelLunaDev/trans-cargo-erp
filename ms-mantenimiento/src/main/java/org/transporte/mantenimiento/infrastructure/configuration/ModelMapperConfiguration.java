@@ -11,7 +11,6 @@ public class ModelMapperConfiguration {
     @Bean
     public ModelMapper modelMapper() {
         ModelMapper modelMapper = new ModelMapper();
-        // STRICT evita que "vehiculoId" se copie por error en "id"
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         return modelMapper;
     }

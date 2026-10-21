@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-// lo minimo que MS-Viajes necesita saber de un vehiculo de MS-Flota
 @Getter
 @Setter
 @NoArgsConstructor

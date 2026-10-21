@@ -11,7 +11,6 @@ import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Mono;
 
-// si el servicio destino esta apagado el gateway responde 503 en lugar de 500
 @Component
 public class ServicioNoDisponibleFilter implements GlobalFilter {
 

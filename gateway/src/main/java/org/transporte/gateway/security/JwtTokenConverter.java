@@ -9,7 +9,6 @@ import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Mono;
 
-// saca el token del encabezado "Authorization: Bearer <jwt>"
 @Component
 public class JwtTokenConverter implements ServerAuthenticationConverter {
 

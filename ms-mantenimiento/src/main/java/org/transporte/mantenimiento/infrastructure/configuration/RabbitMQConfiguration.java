@@ -43,7 +43,6 @@ public class RabbitMQConfiguration {
         return new Jackson2JsonMessageConverter(objectMapper);
     }
 
-    // se ejecuta cuando se agotan los reintentos: deja el log y descarta el mensaje
     @Bean
     public MessageRecoverer messageRecoverer() {
         return (message, causa) -> {
