@@ -1,0 +1,1419 @@
+{
+ "info": {
+  "name": "TRANS-CARGO ERP",
+  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+  "description": "Ejecutar las carpetas en orden con Runner. Todo pasa por el gateway."
+ },
+ "item": [
+  {
+   "name": "00 Datos aleatorios (ejecutar primero)",
+   "item": [
+    {
+     "name": "Generar placa, DNI y usuario",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "var L='ABCDEFGHJKLMNPRSTUVWXYZ'; var pl=''; for(var i=0;i<3;i++){pl+=L.charAt(Math.floor(Math.random()*L.length));} pm.collectionVariables.set('placa', pl+'-'+Math.floor(100+Math.random()*899));",
+         "pm.collectionVariables.set('dni',String(Math.floor(10000000+Math.random()*89999999)));",
+         "pm.collectionVariables.set('lic','Q'+Math.floor(10000000+Math.random()*89999999));",
+         "pm.collectionVariables.set('user','user'+Math.floor(Math.random()*100000));",
+         "pm.collectionVariables.set('serie','T'+Math.floor(100+Math.random()*899));"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// solo genera variables; la respuesta del servidor no importa"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/auth/login",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "auth",
+        "login"
+       ]
+      },
+      "auth": {
+       "type": "noauth"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "01 Autenticacion",
+   "item": [
+    {
+     "name": "Registrar usuario",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Registro 2xx', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/auth/register",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "auth",
+        "register"
+       ]
+      },
+      "auth": {
+       "type": "noauth"
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"username\": \"{{user}}\",\n  \"password\": \"Clave12345\",\n  \"email\": \"{{user}}@correo.com\",\n  \"rol\": \"DESPACHADOR\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Login (guarda el token)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Login 200', function(){ pm.response.to.have.status(200); });",
+         "pm.collectionVariables.set('token', pm.response.json().token);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/auth/login",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "auth",
+        "login"
+       ]
+      },
+      "auth": {
+       "type": "noauth"
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"username\": \"{{user}}\",\n  \"password\": \"Clave12345\"\n}"
+      }
+     }
+    },
+    {
+     "name": "Sin token -> 401",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 401', function(){ pm.response.to.have.status(401); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/vehiculos",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "vehiculos"
+       ]
+      },
+      "auth": {
+       "type": "noauth"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "02 Flota (GET POST PUT DELETE)",
+   "item": [
+    {
+     "name": "POST vehiculo",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Creado', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+         "var j = pm.response.json(); pm.collectionVariables.set('vehiculoId', j.id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/vehiculos",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "vehiculos"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"placa\": \"{{placa}}\",\n  \"marca\": \"Volvo\",\n  \"modelo\": \"FH16\",\n  \"taraKg\": 9000.0,\n  \"numeroEjes\": 3,\n  \"soatVigencia\": \"2027-12-31\",\n  \"citvVigencia\": \"2027-12-31\",\n  \"estado\": \"DISPONIBLE\"\n}"
+      }
+     }
+    },
+    {
+     "name": "GET vehiculos",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/vehiculos",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "vehiculos"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "GET vehiculo por id",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/vehiculos/{{vehiculoId}}",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "vehiculos",
+        "{{vehiculoId}}"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "PUT vehiculo",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/vehiculos/{{vehiculoId}}",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "vehiculos",
+        "{{vehiculoId}}"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"placa\": \"{{placa}}\",\n  \"marca\": \"Volvo\",\n  \"modelo\": \"FH16 Actualizado\",\n  \"taraKg\": 9000.0,\n  \"numeroEjes\": 3,\n  \"soatVigencia\": \"2027-12-31\",\n  \"citvVigencia\": \"2027-12-31\",\n  \"estado\": \"DISPONIBLE\"\n}"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "03 Conductores",
+   "item": [
+    {
+     "name": "POST conductor",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Creado', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+         "var j = pm.response.json(); pm.collectionVariables.set('conductorId', j.id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/conductores",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "conductores"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"dni\": \"{{dni}}\",\n  \"nombres\": \"Juan\",\n  \"apellidos\": \"Perez Rojas\",\n  \"licenciaNumero\": \"{{lic}}\",\n  \"categoriaLicencia\": \"A_IIIC\",\n  \"licenciaVigencia\": \"2028-06-30\",\n  \"puntosAcumulados\": 0,\n  \"estado\": \"HABILITADO\"\n}"
+      }
+     }
+    },
+    {
+     "name": "GET conductores",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/conductores",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "conductores"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "GET conductor por id",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/conductores/{{conductorId}}",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "conductores",
+        "{{conductorId}}"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "PUT conductor",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/conductores/{{conductorId}}",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "conductores",
+        "{{conductorId}}"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"dni\": \"{{dni}}\",\n  \"nombres\": \"Juan Carlos\",\n  \"apellidos\": \"Perez Rojas\",\n  \"licenciaNumero\": \"{{lic}}\",\n  \"categoriaLicencia\": \"A_IIIC\",\n  \"licenciaVigencia\": \"2028-06-30\",\n  \"puntosAcumulados\": 0,\n  \"estado\": \"HABILITADO\"\n}"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "04 Viajes (Feign + RabbitMQ)",
+   "item": [
+    {
+     "name": "POST programar viaje (valida vehiculo y conductor)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Creado', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+         "var j = pm.response.json(); pm.collectionVariables.set('viajeId', j.id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/api/viajes",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "viajes"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"vehiculoId\": \"{{vehiculoId}}\",\n  \"conductorId\": \"{{conductorId}}\",\n  \"origen\": \"Lima\",\n  \"destino\": \"Arequipa\",\n  \"distanciaKm\": 1010.0,\n  \"fechaSalida\": \"2026-12-01T08:00:00\"\n}"
+      }
+     }
+    },
+    {
+     "name": "GET viajes",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/viajes",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "viajes"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "PUT iniciar viaje (publica evento)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/viajes/{{viajeId}}/iniciar",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "viajes",
+        "{{viajeId}}",
+        "iniciar"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "GET odometro (evento RabbitMQ aplicado)",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "setTimeout(function(){}, 1500);"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/mantenimiento/odometros/{{vehiculoId}}",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "mantenimiento",
+        "odometros",
+        "{{vehiculoId}}"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "PUT finalizar viaje",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/viajes/{{viajeId}}/finalizar",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "viajes",
+        "{{viajeId}}",
+        "finalizar"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "05 Carga",
+   "item": [
+    {
+     "name": "POST mercancia",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Creado', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+         "var j = pm.response.json(); pm.collectionVariables.set('mercanciaId', j.id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/api/carga/mercancias",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "carga",
+        "mercancias"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"descripcion\": \"Cemento en bolsas\",\n  \"tipo\": \"GENERAL\",\n  \"claseRiesgo\": \"N/A\",\n  \"pesoKg\": 15000.0\n}"
+      }
+     }
+    },
+    {
+     "name": "POST guia de remision",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Creado', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+         "var j = pm.response.json(); pm.collectionVariables.set('guiaId', j.id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/api/carga/guias",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "carga",
+        "guias"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"serie\": \"{{serie}}\",\n  \"viajeId\": \"{{viajeId}}\",\n  \"remitente\": \"Empresa A SAC\",\n  \"destinatario\": \"Empresa B SAC\",\n  \"origen\": \"Lima\",\n  \"destino\": \"Arequipa\",\n  \"mercanciaId\": \"{{mercanciaId}}\",\n  \"pesoTotalKg\": 15000.0\n}"
+      }
+     }
+    },
+    {
+     "name": "POST pesaje",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Creado', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+         "var j = pm.response.json(); pm.collectionVariables.set('pesajeId', j.id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/api/carga/pesajes",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "carga",
+        "pesajes"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"placa\": \"{{placa}}\",\n  \"viajeId\": \"{{viajeId}}\",\n  \"taraKg\": 9000.0,\n  \"pesoBrutoKg\": 24000.0,\n  \"cantidadEjes\": 3\n}"
+      }
+     }
+    },
+    {
+     "name": "GET mercancias",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/carga/mercancias",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "carga",
+        "mercancias"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "06 Mantenimiento",
+   "item": [
+    {
+     "name": "POST neumatico",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Creado', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+         "var j = pm.response.json(); pm.collectionVariables.set('neumaticoId', j.id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/api/mantenimiento/neumaticos",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "mantenimiento",
+        "neumaticos"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"vehiculoId\": \"{{vehiculoId}}\",\n  \"posicion\": \"DEL-IZQ\",\n  \"vidaUtilKm\": 80000.0\n}"
+      }
+     }
+    },
+    {
+     "name": "POST revision",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Creado', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+         "var j = pm.response.json(); pm.collectionVariables.set('revisionId', j.id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "POST",
+      "header": [
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{base_url}}/api/mantenimiento/revisiones",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "mantenimiento",
+        "revisiones"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      },
+      "body": {
+       "mode": "raw",
+       "raw": "{\n  \"vehiculoId\": \"{{vehiculoId}}\",\n  \"tipo\": \"PREVENTIVA\",\n  \"kmProgramado\": 50000.0,\n  \"fechaProgramada\": \"2027-01-15\"\n}"
+      }
+     }
+    },
+    {
+     "name": "GET revisiones vencidas",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/mantenimiento/revisiones/vencidas",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "mantenimiento",
+        "revisiones",
+        "vencidas"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "07 DELETE (limpieza)",
+   "item": [
+    {
+     "name": "DELETE revision",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Borrado 204', function(){ pm.response.to.have.status(204); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/mantenimiento/revisiones/{{revisionId}}",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "mantenimiento",
+        "revisiones",
+        "{{revisionId}}"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "DELETE neumatico",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Borrado 204', function(){ pm.response.to.have.status(204); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/mantenimiento/neumaticos/{{neumaticoId}}",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "mantenimiento",
+        "neumaticos",
+        "{{neumaticoId}}"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "DELETE pesaje",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Borrado 204', function(){ pm.response.to.have.status(204); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/carga/pesajes/{{pesajeId}}",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "carga",
+        "pesajes",
+        "{{pesajeId}}"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "DELETE mercancia (puede fallar si la guia la usa)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Borrado 204', function(){ pm.response.to.have.status(204); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/carga/mercancias/{{mercanciaId}}",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "carga",
+        "mercancias",
+        "{{mercanciaId}}"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "PUT anular guia",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "PUT",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/carga/guias/{{guiaId}}/anular",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "carga",
+        "guias",
+        "{{guiaId}}",
+        "anular"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "DELETE guia (solo ANULADA)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Borrado 204', function(){ pm.response.to.have.status(204); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/carga/guias/{{guiaId}}",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "carga",
+        "guias",
+        "{{guiaId}}"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "name": "DELETE viaje FINALIZADO -> 422 (regla de negocio)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('Status 422', function(){ pm.response.to.have.status(422); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "method": "DELETE",
+      "header": [],
+      "url": {
+       "raw": "{{base_url}}/api/viajes/{{viajeId}}",
+       "host": [
+        "{{base_url}}"
+       ],
+       "path": [
+        "api",
+        "viajes",
+        "{{viajeId}}"
+       ]
+      },
+      "auth": {
+       "type": "bearer",
+       "bearer": [
+        {
+         "key": "token",
+         "value": "{{token}}",
+         "type": "string"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "variable": [
+  {
+   "key": "token",
+   "value": ""
+  },
+  {
+   "key": "placa",
+   "value": ""
+  },
+  {
+   "key": "dni",
+   "value": ""
+  },
+  {
+   "key": "lic",
+   "value": ""
+  },
+  {
+   "key": "user",
+   "value": ""
+  },
+  {
+   "key": "serie",
+   "value": ""
+  },
+  {
+   "key": "vehiculoId",
+   "value": ""
+  },
+  {
+   "key": "conductorId",
+   "value": ""
+  },
+  {
+   "key": "viajeId",
+   "value": ""
+  },
+  {
+   "key": "mercanciaId",
+   "value": ""
+  },
+  {
+   "key": "guiaId",
+   "value": ""
+  },
+  {
+   "key": "pesajeId",
+   "value": ""
+  },
+  {
+   "key": "neumaticoId",
+   "value": ""
+  },
+  {
+   "key": "revisionId",
+   "value": ""
+  }
+ ]
+}
