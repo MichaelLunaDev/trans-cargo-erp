@@ -18,4 +18,6 @@ public interface ViajeUseCase {
     Viaje buscarPorId(Long id);
 
     List<Viaje> listar(EstadoViaje estado, Long vehiculoId);
+
+    void eliminar(Long id);
 }

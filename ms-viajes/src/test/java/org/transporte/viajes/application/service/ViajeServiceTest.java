@@ -341,4 +341,36 @@ class ViajeServiceTest {
         assertEquals(EstadoViaje.CANCELADO, service.cancelar(10L).getEstado());
         assertThrows(ReglaNegocioException.class, () -> service.cancelar(11L));
     }
+
+    // ---------- eliminar ----------
+
+    @Test
+    void debeEliminarViajesProgramadosOCancelados() {
+        when(viajeOutService.buscarPorId(10L)).thenReturn(Optional.of(viajeGuardado(10L, EstadoViaje.PROGRAMADO)));
+        when(viajeOutService.buscarPorId(11L)).thenReturn(Optional.of(viajeGuardado(11L, EstadoViaje.CANCELADO)));
+
+        service.eliminar(10L);
+        service.eliminar(11L);
+
+        verify(viajeOutService).eliminar(10L);
+        verify(viajeOutService).eliminar(11L);
+    }
+
+    @Test
+    void debeRechazarEliminarViajeEnCursoOFinalizado() {
+        when(viajeOutService.buscarPorId(10L)).thenReturn(Optional.of(viajeGuardado(10L, EstadoViaje.EN_CURSO)));
+        when(viajeOutService.buscarPorId(11L)).thenReturn(Optional.of(viajeGuardado(11L, EstadoViaje.FINALIZADO)));
+
+        assertThrows(ReglaNegocioException.class, () -> service.eliminar(10L));
+        assertThrows(ReglaNegocioException.class, () -> service.eliminar(11L));
+        verify(viajeOutService, never()).eliminar(anyLong());
+    }
+
+    @Test
+    void eliminarViajeInexistenteDebeLanzarNoEncontrado() {
+        when(viajeOutService.buscarPorId(50L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class, () -> service.eliminar(50L));
+        verify(viajeOutService, never()).eliminar(anyLong());
+    }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,5 +46,11 @@ public class PesajeController {
         return ResponseEntity.ok(pesajes.stream()
                 .map(pesaje -> modelMapper.map(pesaje, PesajeResponseDto.class))
                 .toList());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        pesajeUseCase.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -52,4 +52,9 @@ public class RevisionAdapter implements RevisionOutService {
                 .map(entity -> modelMapper.map(entity, Revision.class))
                 .toList();
     }
+
+    @Override
+    public void eliminar(Long id) {
+        revisionRepository.deleteById(id);
+    }
 }
