@@ -5,7 +5,7 @@ neumaticos y las revisiones periodicas. Se alimenta de forma asincrona con el ev
 que publica MS-Viajes en RabbitMQ.
 
 - Puerto: `8085`
-- Base de datos: `db_mantenimiento` (PostgreSQL, `localhost:5433`, usuario/clave `postgres`)
+- Base de datos: `db_mantenimiento` (MySQL, `localhost:3307`, usuario/clave `root` / `root`)
 - RabbitMQ: `localhost:5672`, usuario/clave `guest`
 - Arquitectura: hexagonal (`domian`, `application`, `infrastructure`)
 

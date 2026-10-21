@@ -9,14 +9,14 @@
 <br/>
 
 <a href="https://skillicons.dev">
-  <img src="https://skillicons.dev/icons?i=java,spring,maven,postgres,rabbitmq,docker,git,github&theme=light" alt="Tecnologías" />
+  <img src="https://skillicons.dev/icons?i=java,spring,maven,mysql,rabbitmq,docker,git,github&theme=light" alt="Tecnologías" />
 </a>
 
 <br/><br/>
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.4-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-Eventos-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Dev-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-Seguridad-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
@@ -83,7 +83,7 @@ mantenimiento en **hojas de cálculo o cuadernos separados**, lo que genera:
 ## 🏗️ Arquitectura
 
 Cada microservicio es una aplicación **Spring Boot** independiente, con su propio
-puerto y su propia base de datos **PostgreSQL**. Se comunican de dos formas:
+puerto y su propia base de datos **MySQL**. Se comunican de dos formas:
 
 - **Síncrona (OpenFeign):** `ms-viajes` pregunta a `ms-flota` por el SOAT/CITV y a `ms-conductores` por el brevete.
 - **Asíncrona (RabbitMQ):** `ms-viajes` publica `viaje.iniciado` y `ms-mantenimiento` lo consume sin que el viaje tenga que esperarlo.
@@ -107,7 +107,7 @@ flowchart TB
 
     MQ{{"🐇 RabbitMQ<br/>exchange trans.events"}}
 
-    subgraph D["🗄️ PostgreSQL — una base por servicio"]
+    subgraph D["🗄️ MySQL — una base por servicio"]
         DB1[("db_viajes")]
         DB2[("db_flota")]
         DB3[("db_conductores")]
@@ -189,7 +189,7 @@ La regla de oro: **`domian` y `application` nunca importan nada de `infrastructu
 | **Backend** | Java 21 · Spring Boot 3.3 · Spring Data JPA · Bean Validation · Lombok · ModelMapper |
 | **Comunicación** | OpenFeign (síncrona) · RabbitMQ (asíncrona) |
 | **Seguridad** | Spring Security · JWT · BCrypt |
-| **Base de datos** | PostgreSQL (una base por servicio) |
+| **Base de datos** | MySQL (una base por servicio) |
 | **Build** | Maven (wrapper incluido en los módulos) |
 | **Contenedores** | Docker · Docker Compose |
 | **Pruebas** | JUnit 5 · Mockito |
@@ -201,7 +201,7 @@ La regla de oro: **`domian` y `application` nunca importan nada de `infrastructu
 ```text
 trans-cargo-erp/
 ├── README.md
-├── docker/                      # PostgreSQL + RabbitMQ (docker-compose y script de bases)
+├── docker/                      # MySQL + RabbitMQ (docker-compose y script de bases)
 ├── ms-auth/                     # Login, registro y JWT
 ├── ms-flota/                    # Vehículos, SOAT y CITV
 ├── ms-conductores/              # Conductores y brevete
@@ -228,7 +228,7 @@ git clone https://github.com/MichaelLunaDev/trans-cargo-erp.git
 cd trans-cargo-erp
 ```
 
-### 2. Levantar PostgreSQL y RabbitMQ
+### 2. Levantar MySQL y RabbitMQ
 
 ```bash
 cd docker
@@ -237,7 +237,7 @@ docker compose up -d
 
 | Servicio | Dirección | Credenciales |
 |---|---|---|
-| PostgreSQL | `localhost:5433` | `postgres` / `postgres` |
+| MySQL | `localhost:3307` | `root` / `root` |
 | RabbitMQ | `localhost:5672` | `guest` / `guest` |
 | Panel de RabbitMQ | http://localhost:15672 | `guest` / `guest` |
 
@@ -362,7 +362,7 @@ Los merges se hacen con `--no-ff` para conservar el historial de cada módulo.
 
 ## 🗺️ Roadmap
 
-- [x] Infraestructura con Docker (PostgreSQL + RabbitMQ)
+- [x] Infraestructura con Docker (MySQL + RabbitMQ)
 - [x] ms-auth con login, BCrypt y JWT
 - [x] ms-flota y ms-conductores (CRUD)
 - [x] ms-carga con arquitectura hexagonal

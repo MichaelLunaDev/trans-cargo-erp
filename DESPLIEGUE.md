@@ -1,9 +1,9 @@
 # Despliegue con Docker
 
-Todo el sistema (PostgreSQL, RabbitMQ y los 7 servicios) se levanta con el `docker-compose.yml` de la raíz.
+Todo el sistema (MySQL, RabbitMQ y los 7 servicios) se levanta con el `docker-compose.yml` de la raíz.
 Solo el gateway queda accesible desde fuera, en el puerto **8080**. El resto se comunica por la red interna de Docker usando el nombre de cada servicio.
 
-> El archivo `docker/docker-compose.yml` sigue siendo el de desarrollo: solo levanta PostgreSQL y RabbitMQ para ejecutar los servicios desde el IDE.
+> El archivo `docker/docker-compose.yml` sigue siendo el de desarrollo: solo levanta MySQL y RabbitMQ para ejecutar los servicios desde el IDE.
 
 ## Requisitos
 
@@ -22,7 +22,7 @@ Solo el gateway queda accesible desde fuera, en el puerto **8080**. El resto se 
 | ms-carga | 8084 | no | db_carga |
 | ms-mantenimiento | 8085 | no | db_mantenimiento |
 | ms-auth | 8086 | no | db_auth |
-| postgres | 5432 | no | — |
+| mysql | 3306 | no | — |
 | rabbitmq | 5672 / 15672 | no | — |
 
 Rutas del gateway: `/auth/**`, `/api/viajes/**`, `/vehiculos/**`, `/conductores/**`, `/api/carga/**`, `/api/mantenimiento/**`.
@@ -39,7 +39,7 @@ cp .env.example .env
 Si no existe `.env`, el compose arranca con valores por defecto de desarrollo.
 La clave `JWT_SECRET` se define una sola vez y la usan ms-auth (para firmar) y el gateway (para validar).
 
-La contraseña de PostgreSQL solo se aplica cuando se crea el volumen por primera vez. Si la cambias después, borra el volumen (`docker compose down -v`, se pierden los datos).
+La contraseña de MySQL (`MYSQL_ROOT_PASSWORD`) solo se aplica cuando se crea el volumen por primera vez. Si la cambias después, borra el volumen (`docker compose down -v`, se pierden los datos).
 
 ## Comandos
 
@@ -54,7 +54,7 @@ docker compose ps
 docker compose logs -f
 docker compose logs -f ms-viajes
 
-# apagar (los datos se conservan en el volumen pgdata)
+# apagar (los datos se conservan en el volumen mysqldata)
 docker compose down
 
 # apagar y borrar también los datos
@@ -63,7 +63,7 @@ docker compose down -v
 
 La primera construcción descarga las dependencias de Maven y tarda varios minutos. Las siguientes reutilizan la caché mientras no cambie el `pom.xml`.
 
-Los servicios tardan entre 20 y 60 segundos en arrancar después de que PostgreSQL y RabbitMQ estén listos. Si el gateway responde 503 al principio, espera y vuelve a intentar.
+Los servicios tardan entre 20 y 60 segundos en arrancar después de que MySQL y RabbitMQ estén listos. Si el gateway responde 503 al principio, espera y vuelve a intentar.
 
 ## Despliegue en una máquina virtual Linux
 
@@ -76,7 +76,7 @@ Los servicios tardan entre 20 y 60 segundos en arrancar después de que PostgreS
 3. Crear el `.env` con valores reales:
    ```bash
    cp .env.example .env
-   nano .env   # cambiar POSTGRES_PASSWORD, RABBITMQ_PASSWORD y JWT_SECRET
+   nano .env   # cambiar MYSQL_ROOT_PASSWORD, RABBITMQ_PASSWORD y JWT_SECRET
    ```
 4. Levantar:
    ```bash
@@ -101,9 +101,9 @@ Estimación aproximada en ejecución:
 | Componente | RAM aprox. |
 |---|---|
 | Cada servicio Spring Boot (7) | 250–330 MB |
-| PostgreSQL | 50–100 MB |
+| MySQL | 450–550 MB |
 | RabbitMQ | 120–150 MB |
-| **Total** | **≈ 2–2,6 GB** |
+| **Total** | **≈ 2,3–3 GB** |
 
 Recomendación: una VM con **4 GB de RAM** (o 2 GB más 2 GB de swap, con arranque más lento). La compilación con Maven también consume memoria; si la VM es pequeña y la construcción falla, construye los servicios de uno en uno:
 
