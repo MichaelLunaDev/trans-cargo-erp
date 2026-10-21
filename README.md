@@ -35,6 +35,7 @@
 - [Arquitectura](#-arquitectura)
 - [Estructura del repositorio](#-estructura-del-repositorio)
 - [Cómo levantar el proyecto](#-cómo-levantar-el-proyecto)
+- [Pruebas con Postman](#-pruebas-con-postman)
 - [API — Viajes, Mantenimiento y Carga](#-api--viajes-mantenimiento-y-carga)
 - [Flujo de trabajo con Git](#-flujo-de-trabajo-con-git)
 - [Equipo](#-equipo)
@@ -261,6 +262,22 @@ cd ms-mantenimiento
 ```bash
 ./mvnw test
 ```
+
+---
+
+## 🧪 Pruebas con Postman
+
+La carpeta `postman/` trae la colección y el entorno para probar todo el sistema a través del gateway.
+
+1. Levantar el sistema completo desde la raíz del repositorio:
+   ```bash
+   docker compose up -d --build
+   ```
+2. En Postman, **Import** de los dos archivos:
+   `postman/TRANS-CARGO.postman_collection.json` y `postman/TRANS-CARGO.postman_environment.json`.
+3. Elegir el entorno **TRANS-CARGO local** (`base_url = http://localhost:8080`).
+4. Abrir la colección con **Runner** y ejecutarla completa en orden: la carpeta `00` genera placa, DNI,
+   usuario y serie aleatorios, y `01` guarda el token que usan las demás peticiones.
 
 ---
 
