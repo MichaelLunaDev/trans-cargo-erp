@@ -70,7 +70,7 @@ Los servicios tardan entre 20 y 60 segundos en arrancar después de que MySQL y 
 1. Instalar Docker (por ejemplo en Ubuntu: `curl -fsSL https://get.docker.com | sh`) y agregar tu usuario al grupo `docker` (`sudo usermod -aG docker $USER`, luego cerrar y abrir sesión).
 2. Clonar el repositorio:
    ```bash
-   git clone <url-del-repositorio> trans-cargo-erp
+   git clone https://github.com/MichaelLunaDev/trans-cargo-erp trans-cargo-erp
    cd trans-cargo-erp
    ```
 3. Crear el `.env` con valores reales:
