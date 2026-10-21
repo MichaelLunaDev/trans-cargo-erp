@@ -40,7 +40,6 @@ class InfraestructuraMapeoTest {
                 """;
         MessageProperties properties = new MessageProperties();
         properties.setContentType(MessageProperties.CONTENT_TYPE_JSON);
-        // MS-Viajes envia el nombre de SU clase; aqui se debe usar el tipo del parametro del listener
         properties.setHeader("__TypeId__", "org.transporte.viajes.infrastructure.messaging.ViajeIniciadoEvent");
         properties.setInferredArgumentType(ViajeIniciadoEvent.class);
 

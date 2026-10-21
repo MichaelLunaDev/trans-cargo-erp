@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// respuesta de GET /conductores/{id} de MS-Conductores (solo los campos que usa MS-Viajes)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

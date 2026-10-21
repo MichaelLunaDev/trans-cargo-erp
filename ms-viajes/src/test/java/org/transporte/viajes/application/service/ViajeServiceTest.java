@@ -94,8 +94,6 @@ class ViajeServiceTest {
         when(conductorOutService.buscarPorId(3L)).thenReturn(conductor);
     }
 
-    // ---------- programar ----------
-
     @Test
     void debeProgramarViajeCorrecto() {
         prepararRemotos(vehiculo(EstadoVehiculo.DISPONIBLE, VIGENTE, VIGENTE),
@@ -209,8 +207,6 @@ class ViajeServiceTest {
         verify(viajeOutService, never()).guardar(any());
     }
 
-    // ---------- iniciar ----------
-
     @Test
     void iniciarDebePublicarElEventoUnaSolaVezConLosDatosCorrectos() {
         when(viajeOutService.buscarPorId(10L)).thenReturn(Optional.of(viajeGuardado(10L, EstadoViaje.PROGRAMADO)));
@@ -227,7 +223,6 @@ class ViajeServiceTest {
         assertEquals(7L, enviado.getVehiculoId());
         assertEquals("ABC-123", enviado.getPlaca());
         assertEquals(1010.5, enviado.getDistanciaKm());
-        // la fecha del evento es la hora de inicio, sin fracciones de segundo (yyyy-MM-ddTHH:mm:ss)
         assertNotNull(enviado.getFecha());
         assertEquals(0, enviado.getFecha().getNano());
         assertFalse(enviado.getFecha().isBefore(antes));
@@ -313,8 +308,6 @@ class ViajeServiceTest {
         assertThrows(RecursoNoEncontradoException.class, () -> service.iniciar(50L));
     }
 
-    // ---------- finalizar y cancelar ----------
-
     @Test
     void debeFinalizarViajeEnCursoSinPublicarEvento() {
         when(viajeOutService.buscarPorId(10L)).thenReturn(Optional.of(viajeGuardado(10L, EstadoViaje.EN_CURSO)));
@@ -341,8 +334,6 @@ class ViajeServiceTest {
         assertEquals(EstadoViaje.CANCELADO, service.cancelar(10L).getEstado());
         assertThrows(ReglaNegocioException.class, () -> service.cancelar(11L));
     }
-
-    // ---------- eliminar ----------
 
     @Test
     void debeEliminarViajesProgramadosOCancelados() {

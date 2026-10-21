@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
-// responde 401 y 403 en JSON en lugar de la respuesta por defecto de Spring Security
 @Component
 @RequiredArgsConstructor
 public class RespuestaErrorSeguridad implements ServerAuthenticationEntryPoint, ServerAccessDeniedHandler {

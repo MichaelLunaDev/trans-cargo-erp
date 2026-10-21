@@ -26,7 +26,6 @@ public class VehiculoClientAdapter implements VehiculoOutService {
         } catch (FeignException.NotFound ex) {
             throw new RecursoNoEncontradoException("No existe el vehiculo con id " + id + " en MS-Flota");
         } catch (FeignException ex) {
-            // sin respuesta, timeout o error 5xx: las excepciones de Feign no salen de este paquete
             log.error("Error al consultar el vehiculo {} en MS-Flota: {}", id, ex.getMessage());
             throw new ServicioNoDisponibleException("MS-Flota no esta disponible, intente nuevamente");
         }

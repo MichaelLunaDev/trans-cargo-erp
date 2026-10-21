@@ -26,7 +26,6 @@ public class ConductorClientAdapter implements ConductorOutService {
         } catch (FeignException.NotFound ex) {
             throw new RecursoNoEncontradoException("No existe el conductor con id " + id + " en MS-Conductores");
         } catch (FeignException ex) {
-            // sin respuesta, timeout o error 5xx: las excepciones de Feign no salen de este paquete
             log.error("Error al consultar el conductor {} en MS-Conductores: {}", id, ex.getMessage());
             throw new ServicioNoDisponibleException("MS-Conductores no esta disponible, intente nuevamente");
         }

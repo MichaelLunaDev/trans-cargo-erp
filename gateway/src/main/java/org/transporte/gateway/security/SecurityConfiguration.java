@@ -19,7 +19,6 @@ import org.springframework.security.web.server.util.matcher.ServerWebExchangeMat
 @EnableWebFluxSecurity
 public class SecurityConfiguration {
 
-    // las unicas rutas que no piden token
     private static final ServerWebExchangeMatcher RUTAS_PUBLICAS =
             ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST, "/auth/login", "/auth/register");
 
@@ -31,7 +30,6 @@ public class SecurityConfiguration {
         AuthenticationWebFilter jwtFilter = new AuthenticationWebFilter(jwtAuthenticationManager);
         jwtFilter.setServerAuthenticationConverter(jwtTokenConverter);
         jwtFilter.setAuthenticationFailureHandler(new ServerAuthenticationEntryPointFailureHandler(respuestaError));
-        // en login y registro no se revisa el token, aunque venga uno viejo
         jwtFilter.setRequiresAuthenticationMatcher(new NegatedServerWebExchangeMatcher(RUTAS_PUBLICAS));
 
         return http
