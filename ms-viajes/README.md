@@ -5,7 +5,7 @@ de forma sincrona (OpenFeign) a MS-Flota y MS-Conductores para validar que la un
 regla, y al iniciar un viaje avisa de forma asincrona a MS-Mantenimiento con el evento `viaje.iniciado`.
 
 - Puerto: `8081`
-- Base de datos: `db_viajes` (PostgreSQL, `localhost:5433`, usuario/clave `postgres`), tabla `viajes`
+- Base de datos: `db_viajes` (MySQL, `localhost:3307`, usuario/clave `root` / `root`), tabla `viajes`
 - RabbitMQ: `localhost:5672`, usuario/clave `guest`
 - Arquitectura: hexagonal (`domian`, `application`, `infrastructure`)
 

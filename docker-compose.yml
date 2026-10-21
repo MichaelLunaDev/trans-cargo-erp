@@ -1,4 +1,4 @@
-# TRANS-CARGO ERP: sistema completo (PostgreSQL, RabbitMQ y los 7 servicios).
+# TRANS-CARGO ERP: sistema completo (MySQL, RabbitMQ y los 7 servicios).
 # Uso: docker compose up -d --build
 # Solo el gateway (8080) queda publicado; el resto se comunica por la red interna.
 # Los valores se leen del archivo .env (ver .env.example); si no existe, se usan los valores por defecto.
@@ -16,8 +16,8 @@ x-entorno-jvm: &entorno-jvm
   JAVA_TOOL_OPTIONS: ${JAVA_OPTS:--Xms64m -Xmx192m -XX:MaxMetaspaceSize=128m -Xss512k -XX:+UseSerialGC}
 
 x-entorno-db: &entorno-db
-  DB_USER: ${POSTGRES_USER:-postgres}
-  DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+  DB_USER: root
+  DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
 
 x-entorno-rabbit: &entorno-rabbit
   RABBITMQ_HOST: rabbitmq
@@ -29,26 +29,27 @@ x-entorno-rabbit: &entorno-rabbit
 x-jwt-secret: &jwt-secret ${JWT_SECRET:-trans-cargo-erp-clave-secreta-desarrollo-minimo-32-bytes}
 
 x-depende-infra: &depende-infra
-  postgres:
+  mysql:
     condition: service_healthy
   rabbitmq:
     condition: service_healthy
 
 services:
-  postgres:
-    image: postgres:16
+  mysql:
+    image: mysql:8.4
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      TZ: America/Lima
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
       - ./docker/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      # 127.0.0.1 obliga a usar TCP: durante la inicialización solo escucha el socket y no da falso positivo
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 30
     networks:
       - transcargo
 
@@ -73,7 +74,7 @@ services:
     build: ./ms-auth
     environment:
       <<: [*entorno-jvm, *entorno-db]
-      DB_URL: jdbc:postgresql://postgres:5432/db_auth
+      DB_URL: "jdbc:mysql://mysql:3306/db_auth?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true"
       JWT_SECRET: *jwt-secret
       JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
     depends_on: *depende-infra
@@ -83,7 +84,7 @@ services:
     build: ./ms-flota
     environment:
       <<: [*entorno-jvm, *entorno-db]
-      DB_URL: jdbc:postgresql://postgres:5432/db_flota
+      DB_URL: "jdbc:mysql://mysql:3306/db_flota?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true"
     depends_on: *depende-infra
 
   ms-conductores:
@@ -91,7 +92,7 @@ services:
     build: ./ms-conductores
     environment:
       <<: [*entorno-jvm, *entorno-db]
-      DB_URL: jdbc:postgresql://postgres:5432/db_conductores
+      DB_URL: "jdbc:mysql://mysql:3306/db_conductores?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true"
     depends_on: *depende-infra
 
   ms-carga:
@@ -99,7 +100,7 @@ services:
     build: ./ms-carga
     environment:
       <<: [*entorno-jvm, *entorno-db]
-      DB_URL: jdbc:postgresql://postgres:5432/db_carga
+      DB_URL: "jdbc:mysql://mysql:3306/db_carga?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true"
     depends_on: *depende-infra
 
   ms-mantenimiento:
@@ -107,7 +108,7 @@ services:
     build: ./ms-mantenimiento
     environment:
       <<: [*entorno-jvm, *entorno-db, *entorno-rabbit]
-      DB_URL: jdbc:postgresql://postgres:5432/db_mantenimiento
+      DB_URL: "jdbc:mysql://mysql:3306/db_mantenimiento?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true"
     depends_on: *depende-infra
 
   ms-viajes:
@@ -115,7 +116,7 @@ services:
     build: ./ms-viajes
     environment:
       <<: [*entorno-jvm, *entorno-db, *entorno-rabbit]
-      DB_URL: jdbc:postgresql://postgres:5432/db_viajes
+      DB_URL: "jdbc:mysql://mysql:3306/db_viajes?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=America/Lima&allowPublicKeyRetrieval=true"
       FLOTA_URL: http://ms-flota:8082
       CONDUCTORES_URL: http://ms-conductores:8083
     depends_on:
@@ -159,4 +160,4 @@ networks:
   transcargo:
 
 volumes:
-  pgdata:
+  mysqldata:

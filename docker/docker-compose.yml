@@ -1,16 +1,21 @@
 services:
-  postgres:
-    image: postgres:16
-    container_name: transcargo-postgres
+  mysql:
+    image: mysql:8.4
+    container_name: transcargo-mysql
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      MYSQL_ROOT_PASSWORD: root
+      TZ: America/Lima
     ports:
-      - "5433:5432"
+      - "3307:3306"   # 3306 suele estar ocupado por un MySQL local
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+      - mysqldata:/var/lib/mysql
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -24,4 +29,4 @@ services:
       - "15672:15672"
 
 volumes:
-  pgdata:
+  mysqldata:
