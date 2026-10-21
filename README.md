@@ -36,7 +36,7 @@
 - [Estructura del repositorio](#-estructura-del-repositorio)
 - [Cómo levantar el proyecto](#-cómo-levantar-el-proyecto)
 - [Pruebas con Postman](#-pruebas-con-postman)
-- [API — Viajes, Mantenimiento y Carga](#-api--viajes-mantenimiento-y-carga)
+- [API](#-api)
 - [Flujo de trabajo con Git](#-flujo-de-trabajo-con-git)
 - [Equipo](#-equipo)
 - [Roadmap](#-roadmap)
@@ -216,20 +216,35 @@ trans-cargo-erp/
 
 ## 🚀 Cómo levantar el proyecto
 
-### Requisitos
+### Opción 1 (recomendada): sistema completo con Docker Compose
+
+Solo necesita 🐳 **Docker** y 🔧 Git; Java y Maven se usan dentro de los contenedores.
+
+```bash
+git clone https://github.com/MichaelLunaDev/trans-cargo-erp.git
+cd trans-cargo-erp
+docker compose up -d --build
+```
+
+Levanta MySQL, RabbitMQ y los 7 servicios. Solo el gateway publica un puerto (**8080**); el resto se comunica
+por la red interna de Docker. Configuración, comandos y despliegue en una VM: [DESPLIEGUE.md](DESPLIEGUE.md).
+
+### Opción 2: desarrollo (infraestructura en Docker y servicios con mvnw)
+
+#### Requisitos
 
 - ☕ **JDK 21**
 - 🐳 **Docker Desktop**
 - 🔧 Git
 
-### 1. Clonar el repositorio
+#### 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/MichaelLunaDev/trans-cargo-erp.git
 cd trans-cargo-erp
 ```
 
-### 2. Levantar MySQL y RabbitMQ
+#### 2. Levantar MySQL y RabbitMQ
 
 ```bash
 cd docker
@@ -247,7 +262,7 @@ El script `docker/init-databases.sql` crea automáticamente las bases
 
 > ⚠️ Estas credenciales son **solo para desarrollo local**.
 
-### 3. Ejecutar un microservicio
+#### 3. Ejecutar un microservicio
 
 Cada servicio se levanta por separado desde su carpeta. Ejemplo con mantenimiento:
 
@@ -257,7 +272,7 @@ cd ms-mantenimiento
 .\mvnw.cmd spring-boot:run      # Windows
 ```
 
-### 4. Ejecutar las pruebas
+#### 4. Ejecutar las pruebas
 
 ```bash
 ./mvnw test
@@ -281,7 +296,40 @@ La carpeta `postman/` trae la colección y el entorno para probar todo el sistem
 
 ---
 
-## 🔧 API — Viajes, Mantenimiento y Carga
+## 🔧 API
+
+Todas las peticiones entran por el **gateway** en `http://localhost:8080`. Salvo `POST /auth/login` y
+`POST /auth/register`, todas exigen el encabezado `Authorization: Bearer <token>` (el token lo devuelve el login);
+sin token o con un token inválido el gateway responde **401**.
+
+### 🔐 Autenticación — ms-auth
+
+| Método | Endpoint | Descripción |
+|:---:|---|---|
+| ![POST](https://img.shields.io/badge/POST-F4B400?style=flat-square) | `/auth/register` | Registra un usuario (sin token) |
+| ![POST](https://img.shields.io/badge/POST-F4B400?style=flat-square) | `/auth/login` | Devuelve el token JWT (sin token) |
+
+### 🚚 Flota — ms-flota
+
+| Método | Endpoint | Descripción |
+|:---:|---|---|
+| ![GET](https://img.shields.io/badge/GET-0F9D58?style=flat-square) | `/vehiculos` | Lista los vehículos |
+| ![GET](https://img.shields.io/badge/GET-0F9D58?style=flat-square) | `/vehiculos/{id}` | Busca un vehículo |
+| ![POST](https://img.shields.io/badge/POST-F4B400?style=flat-square) | `/vehiculos` | Registra un vehículo |
+| ![PUT](https://img.shields.io/badge/PUT-4285F4?style=flat-square) | `/vehiculos/{id}` | Actualiza un vehículo |
+| ![DELETE](https://img.shields.io/badge/DELETE-DB4437?style=flat-square) | `/vehiculos/{id}` | Elimina un vehículo |
+
+### 👷 Conductores — ms-conductores
+
+| Método | Endpoint | Descripción |
+|:---:|---|---|
+| ![GET](https://img.shields.io/badge/GET-0F9D58?style=flat-square) | `/conductores` | Lista los conductores |
+| ![GET](https://img.shields.io/badge/GET-0F9D58?style=flat-square) | `/conductores/{id}` | Busca un conductor |
+| ![POST](https://img.shields.io/badge/POST-F4B400?style=flat-square) | `/conductores` | Registra un conductor |
+| ![PUT](https://img.shields.io/badge/PUT-4285F4?style=flat-square) | `/conductores/{id}` | Actualiza un conductor |
+| ![DELETE](https://img.shields.io/badge/DELETE-DB4437?style=flat-square) | `/conductores/{id}` | Elimina un conductor |
+
+### 🧭 Viajes — ms-viajes
 
 | Método | Endpoint | Descripción |
 |:---:|---|---|
@@ -290,17 +338,37 @@ La carpeta `postman/` trae la colección y el entorno para probar todo el sistem
 | ![PUT](https://img.shields.io/badge/PUT-4285F4?style=flat-square) | `/api/viajes/{id}/finalizar` | Finaliza el viaje |
 | ![PUT](https://img.shields.io/badge/PUT-4285F4?style=flat-square) | `/api/viajes/{id}/cancelar` | Cancela un viaje programado |
 | ![GET](https://img.shields.io/badge/GET-0F9D58?style=flat-square) | `/api/viajes` | Lista viajes (filtros `estado` y `vehiculoId`) |
+| ![DELETE](https://img.shields.io/badge/DELETE-DB4437?style=flat-square) | `/api/viajes/{id}` | Elimina un viaje; solo si está `PROGRAMADO` o `CANCELADO` (si no, 422) |
+
+### 🔧 Mantenimiento — ms-mantenimiento
+
+| Método | Endpoint | Descripción |
+|:---:|---|---|
 | ![GET](https://img.shields.io/badge/GET-0F9D58?style=flat-square) | `/api/mantenimiento/odometros/{vehiculoId}` | Odómetro acumulado de un vehículo |
 | ![POST](https://img.shields.io/badge/POST-F4B400?style=flat-square) | `/api/mantenimiento/neumaticos` | Registra un neumático |
+| ![DELETE](https://img.shields.io/badge/DELETE-DB4437?style=flat-square) | `/api/mantenimiento/neumaticos/{id}` | Elimina un neumático |
 | ![POST](https://img.shields.io/badge/POST-F4B400?style=flat-square) | `/api/mantenimiento/revisiones` | Programa una revisión |
 | ![GET](https://img.shields.io/badge/GET-0F9D58?style=flat-square) | `/api/mantenimiento/revisiones/vencidas` | Lista las revisiones vencidas |
+| ![DELETE](https://img.shields.io/badge/DELETE-DB4437?style=flat-square) | `/api/mantenimiento/revisiones/{id}` | Elimina una revisión |
+
+### 📦 Carga — ms-carga
+
+| Método | Endpoint | Descripción |
+|:---:|---|---|
+| ![DELETE](https://img.shields.io/badge/DELETE-DB4437?style=flat-square) | `/api/carga/mercancias/{id}` | Elimina una mercancía |
+| ![PUT](https://img.shields.io/badge/PUT-4285F4?style=flat-square) | `/api/carga/guias/{id}/anular` | Anula una guía de remisión |
+| ![DELETE](https://img.shields.io/badge/DELETE-DB4437?style=flat-square) | `/api/carga/guias/{id}` | Elimina una guía; solo si está `ANULADA` (si no, 422) |
 | ![POST](https://img.shields.io/badge/POST-F4B400?style=flat-square) | `/api/carga/pesajes` | Registra un pesaje |
+| ![DELETE](https://img.shields.io/badge/DELETE-DB4437?style=flat-square) | `/api/carga/pesajes/{id}` | Elimina un pesaje |
+
+Los DELETE responden **204** si eliminan el registro y **404** si no existe.
 
 <details>
 <summary><b>📨 Ejemplo: registrar un neumático</b></summary>
 
 ```json
-POST http://localhost:8085/api/mantenimiento/neumaticos
+POST http://localhost:8080/api/mantenimiento/neumaticos
+Authorization: Bearer <token>
 {
   "vehiculoId": 7,
   "posicion": "DEL-IZQ",
@@ -387,7 +455,7 @@ Los merges se hacen con `--no-ff` para conservar el historial de cada módulo.
 - [x] ms-viajes con Feign hacia flota y conductores
 - [x] Publicación del evento `viaje.iniciado` desde ms-viajes
 - [x] Gateway con validación de JWT
-- [ ] Todos los servicios dentro de Docker Compose
+- [x] Todos los servicios dentro de Docker Compose
 - [ ] Informe, presentación y entrega final
 
 ---
