@@ -1,6 +1,7 @@
 .metadata/
 
 target/
+*.class
 .classpath
 .project
 .settings/
@@ -21,10 +22,9 @@ logs/
 *.env
 application-local.properties
 
-mvnw
-mvnw.cmd
-.mvn/
 HELP.md
 
 .DS_Store
 Thumbs.db
+
+historial.txt
