@@ -13,7 +13,6 @@ public class VehiculoModel implements VehiculoConstraint {
 
     @Override
     public void validarApto(VehiculoInfo vehiculo, LocalDateTime fechaSalida) {
-        // en mantenimiento o de baja no puede salir; DISPONIBLE y EN_RUTA se consideran activos
         if (vehiculo.getEstado() != EstadoVehiculo.DISPONIBLE && vehiculo.getEstado() != EstadoVehiculo.EN_RUTA) {
             throw new ReglaNegocioException("El vehiculo con id " + vehiculo.getId() + " no esta activo (estado: "
                     + vehiculo.getEstado() + ")");

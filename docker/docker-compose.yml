@@ -7,7 +7,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
       TZ: America/Lima
     ports:
-      - "3307:3306"   # 3306 suele estar ocupado por un MySQL local
+      - "3307:3306"
     volumes:
       - mysqldata:/var/lib/mysql
       - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro

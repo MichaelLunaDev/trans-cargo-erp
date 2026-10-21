@@ -1,12 +1,5 @@
-# TRANS-CARGO ERP: sistema completo (MySQL, RabbitMQ y los 7 servicios).
-# Uso: docker compose up -d --build
-# Solo el gateway (8080) queda publicado; el resto se comunica por la red interna.
-# Los valores se leen del archivo .env (ver .env.example); si no existe, se usan los valores por defecto.
-# El compose de docker/ se mantiene para desarrollo local desde el IDE.
-
 name: transcargo
 
-# configuración común de los servicios Spring Boot
 x-servicio: &servicio
   restart: unless-stopped
   networks:
@@ -25,7 +18,6 @@ x-entorno-rabbit: &entorno-rabbit
   RABBITMQ_USER: ${RABBITMQ_USER:-transcargo}
   RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-transcargo}
 
-# clave JWT compartida por ms-auth (firma) y gateway (valida)
 x-jwt-secret: &jwt-secret ${JWT_SECRET:-trans-cargo-erp-clave-secreta-desarrollo-minimo-32-bytes}
 
 x-depende-infra: &depende-infra
@@ -45,7 +37,6 @@ services:
       - mysqldata:/var/lib/mysql
       - ./docker/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
     healthcheck:
-      # 127.0.0.1 obliga a usar TCP: durante la inicialización solo escucha el socket y no da falso positivo
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 5s
       timeout: 5s
@@ -59,8 +50,6 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-transcargo}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-transcargo}
-    # ports:
-    #   - "15672:15672"   # panel de administración (solo si hace falta revisarlo)
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -137,7 +126,6 @@ services:
       CONDUCTORES_URL: http://ms-conductores:8083
       CARGA_URL: http://ms-carga:8084
       MANTENIMIENTO_URL: http://ms-mantenimiento:8085
-      # misma clave que ms-auth (ancla x-jwt-secret)
       JWT_SECRET: *jwt-secret
       CORS_ORIGENES: ${CORS_ORIGENES:-*}
     ports:

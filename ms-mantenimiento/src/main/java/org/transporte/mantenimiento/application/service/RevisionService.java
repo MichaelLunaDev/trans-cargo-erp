@@ -30,7 +30,6 @@ public class RevisionService implements RevisionUseCase {
         revision.setId(null);
         revision.setEstado(EstadoRevision.PENDIENTE);
 
-        // si el vehiculo ya supero el km programado, la revision nace vencida
         Double kilometrajeActual = odometroOutService.buscarPorVehiculoId(revision.getVehiculoId())
                 .map(Odometro::getKilometrajeAcumulado)
                 .orElse(null);

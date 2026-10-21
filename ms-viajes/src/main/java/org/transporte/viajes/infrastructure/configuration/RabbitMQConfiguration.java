@@ -14,7 +14,6 @@ public class RabbitMQConfiguration {
     public static final String EXCHANGE = "trans.events";
     public static final String ROUTING_KEY_VIAJE_INICIADO = "viaje.iniciado";
 
-    // la cola mantenimiento.viaje.iniciado la declara MS-Mantenimiento, aqui solo el exchange
     @Bean
     public TopicExchange transEventsExchange() {
         return new TopicExchange(EXCHANGE, true, false);
